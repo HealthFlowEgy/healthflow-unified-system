@@ -391,3 +391,73 @@ export class FileController {
 
 export const fileController = new FileController();
 
+
+  /**
+   * Share file with another user
+   */
+  async shareFile(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const { sharedWith, expiresAt } = req.body;
+      const user = (req as any).user;
+
+      const file = await fileService.getFile(id, user.tenantId);
+
+      if (!file) {
+        return res.status(404).json({
+          success: false,
+          error: 'File not found'
+        });
+      }
+
+      // Only owner can share
+      if (file.uploadedBy !== user.id) {
+        return res.status(403).json({
+          success: false,
+          error: 'Only file owner can share'
+        });
+      }
+
+      const share = await fileService.shareFile(
+        id,
+        sharedWith,
+        user.id,
+        expiresAt ? new Date(expiresAt) : undefined
+      );
+
+      res.status(201).json({
+        success: true,
+        data: share
+      });
+    } catch (error) {
+      logger.error('Failed to share file:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to share file'
+      });
+    }
+  }
+
+  /**
+   * Get file statistics
+   */
+  async getFileStats(req: Request, res: Response) {
+    try {
+      const user = (req as any).user;
+      const stats = await fileService.getFileStats(user.tenantId);
+
+      res.status(200).json({
+        success: true,
+        data: stats
+      });
+    } catch (error) {
+      logger.error('Failed to get file stats:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get file statistics'
+      });
+    }
+  }
+}
+
+export const fileController = new FileController();

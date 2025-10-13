@@ -313,3 +313,87 @@ export class FileService {
 
 export const fileService = new FileService();
 
+
+  /**
+   * Check if user has access to file
+   */
+  async checkAccess(file: any, user: any): Promise<boolean> {
+    // Public files are accessible to all
+    if (file.isPublic) {
+      return true;
+    }
+
+    // Owner has access
+    if (file.uploadedBy === user.id) {
+      return true;
+    }
+
+    // Check if file is shared with user
+    const share = await db.query.fileShares.findFirst({
+      where: and(
+        eq(fileShares.fileId, file.id),
+        eq(fileShares.sharedWith, user.id),
+        or(
+          isNull(fileShares.expiresAt),
+          gt(fileShares.expiresAt, new Date())
+        )
+      )
+    });
+
+    return !!share;
+  }
+
+  /**
+   * Log file access
+   */
+  async logAccess(fileId: string, user: any, action: string): Promise<void> {
+    await db.insert(fileAccessLogs).values({
+      id: uuidv4(),
+      fileId,
+      userId: user.id,
+      action,
+      ipAddress: user.ipAddress || null,
+      userAgent: user.userAgent || null,
+      accessedAt: new Date()
+    });
+  }
+
+  /**
+   * Share file with user
+   */
+  async shareFile(fileId: string, sharedWith: string, sharedBy: string, expiresAt?: Date): Promise<any> {
+    const share = await db.insert(fileShares).values({
+      id: uuidv4(),
+      fileId,
+      sharedWith,
+      sharedBy,
+      expiresAt: expiresAt || null,
+      createdAt: new Date()
+    }).returning();
+
+    return share[0];
+  }
+
+  /**
+   * Get file statistics
+   */
+  async getFileStats(tenantId: string): Promise<any> {
+    const stats = await db
+      .select({
+        totalFiles: count(),
+        totalSize: sum(files.fileSize),
+        byCategory: files.category
+      })
+      .from(files)
+      .where(eq(files.tenantId, tenantId))
+      .groupBy(files.category);
+
+    return {
+      totalFiles: stats.reduce((acc, s) => acc + Number(s.totalFiles), 0),
+      totalSize: stats.reduce((acc, s) => acc + Number(s.totalSize || 0), 0),
+      byCategory: stats
+    };
+  }
+}
+
+export const fileService = new FileService();

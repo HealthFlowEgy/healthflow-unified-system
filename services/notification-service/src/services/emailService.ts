@@ -370,3 +370,71 @@ export class EmailService {
 
 export const emailService = new EmailService();
 
+
+  /**
+   * Send account activation email
+   */
+  async sendAccountActivation(to: string, data: { name: string; activationLink: string }): Promise<boolean> {
+    return await this.send({
+      to,
+      subject: 'Activate Your HealthFlow Account',
+      message: `Hello ${data.name}, please activate your account by clicking the link: ${data.activationLink}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2>Welcome to HealthFlow!</h2>
+          <p>Hello ${data.name},</p>
+          <p>Thank you for registering with HealthFlow. Please activate your account by clicking the button below:</p>
+          <a href="${data.activationLink}" style="display: inline-block; padding: 12px 24px; background-color: #007bff; color: white; text-decoration: none; border-radius: 4px; margin: 20px 0;">Activate Account</a>
+          <p>If the button doesn't work, copy and paste this link into your browser:</p>
+          <p>${data.activationLink}</p>
+          <p>This link will expire in 24 hours.</p>
+        </div>
+      `
+    });
+  }
+
+  /**
+   * Send verification code email
+   */
+  async sendVerificationCode(to: string, data: { name: string; code: string }): Promise<boolean> {
+    return await this.send({
+      to,
+      subject: 'Your HealthFlow Verification Code',
+      message: `Your verification code is: ${data.code}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2>Verification Code</h2>
+          <p>Hello ${data.name},</p>
+          <p>Your verification code is:</p>
+          <div style="font-size: 32px; font-weight: bold; text-align: center; padding: 20px; background-color: #f5f5f5; border-radius: 8px; margin: 20px 0;">
+            ${data.code}
+          </div>
+          <p>This code will expire in 10 minutes.</p>
+          <p>If you didn't request this code, please ignore this email.</p>
+        </div>
+      `
+    });
+  }
+
+  /**
+   * Send lab results notification
+   */
+  async sendLabResultsReady(to: string, data: { patientName: string; testName: string; portalLink: string }): Promise<boolean> {
+    return await this.send({
+      to,
+      subject: 'Your Lab Results Are Ready',
+      message: `Your lab results for ${data.testName} are now available.`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2>Lab Results Available</h2>
+          <p>Dear ${data.patientName},</p>
+          <p>Your lab results for <strong>${data.testName}</strong> are now available in your patient portal.</p>
+          <a href="${data.portalLink}" style="display: inline-block; padding: 12px 24px; background-color: #28a745; color: white; text-decoration: none; border-radius: 4px; margin: 20px 0;">View Results</a>
+          <p>Please log in to your patient portal to view your results.</p>
+        </div>
+      `
+    });
+  }
+}
+
+export const emailService = new EmailService();
