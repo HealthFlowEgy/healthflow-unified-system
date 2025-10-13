@@ -1,0 +1,161 @@
+config:
+  target: "https://api.healthflow.eg"
+  phases:
+    # Warm-up phase
+    - duration: 120
+      arrivalRate: 5
+      name: "Warm up"
+    
+    # Ramp up to normal load
+    - duration: 300
+      arrivalRate: 5
+      rampTo: 50
+      name: "Ramp up to normal load"
+    
+    # Sustained normal load
+    - duration: 600
+      arrivalRate: 50
+      name: "Sustained normal load (50 req/s)"
+    
+    # Peak load
+    - duration: 300
+      arrivalRate: 50
+      rampTo: 100
+      name: "Ramp to peak load"
+    
+    # Sustained peak load
+    - duration: 600
+      arrivalRate: 100
+      name: "Sustained peak load (100 req/s)"
+    
+    # Spike test
+    - duration: 60
+      arrivalRate: 200
+      name: "Spike test (200 req/s)"
+    
+    # Cool down
+    - duration: 120
+      arrivalRate: 200
+      rampTo: 10
+      name: "Cool down"
+
+  processor: "./load-test-processor.js"
+  
+  # Performance thresholds
+  ensure:
+    maxErrorRate: 1  # Max 1% error rate
+    p95: 500         # 95th percentile < 500ms
+    p99: 1000        # 99th percentile < 1000ms
+
+scenarios:
+  - name: "Patient Portal Flow"
+    weight: 40
+    flow:
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "{{ $randomEmail }}"
+            password: "Test123!@#"
+          capture:
+            - json: "$.token"
+              as: "authToken"
+      
+      - get:
+          url: "/api/patients/{{ $randomInt(1, 1000) }}"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+      
+      - get:
+          url: "/api/prescriptions?patientId={{ $randomInt(1, 1000) }}"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+      
+      - get:
+          url: "/api/appointments?status=upcoming"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+
+  - name: "Doctor Portal Flow"
+    weight: 30
+    flow:
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "doctor{{ $randomInt(1, 100) }}@healthflow.eg"
+            password: "Doctor123!@#"
+          capture:
+            - json: "$.token"
+              as: "authToken"
+      
+      - get:
+          url: "/api/doctors/dashboard"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+      
+      - get:
+          url: "/api/patients?limit=20"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+      
+      - post:
+          url: "/api/prescriptions"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          json:
+            patientId: "{{ $randomInt(1, 1000) }}"
+            medications:
+              - name: "Aspirin"
+                dosage: "100mg"
+                frequency: "Once daily"
+
+  - name: "Appointment Booking"
+    weight: 20
+    flow:
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "{{ $randomEmail }}"
+            password: "Test123!@#"
+          capture:
+            - json: "$.token"
+              as: "authToken"
+      
+      - get:
+          url: "/api/doctors?specialty=Cardiology"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          capture:
+            - json: "$[0].id"
+              as: "doctorId"
+      
+      - post:
+          url: "/api/appointments"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          json:
+            doctorId: "{{ doctorId }}"
+            date: "{{ $randomDate }}"
+            time: "{{ $randomTime }}"
+            reason: "Regular checkup"
+
+  - name: "Payment Processing"
+    weight: 10
+    flow:
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "{{ $randomEmail }}"
+            password: "Test123!@#"
+          capture:
+            - json: "$.token"
+              as: "authToken"
+      
+      - post:
+          url: "/api/payments/create"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          json:
+            amount: "{{ $randomInt(100, 1000) }}"
+            currency: "EGP"
+            provider: "healthpay"
+            orderId: "ORD-{{ $randomInt(10000, 99999) }}"
