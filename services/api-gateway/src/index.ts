@@ -48,6 +48,14 @@ const services = {
     target: process.env.DOCTOR_SERVICE_URL || 'http://doctor-service:4007',
     pathPrefix: '/api/doctors',
   },
+  appointment: {
+    target: process.env.APPOINTMENT_SERVICE_URL || 'http://appointment-service:4008',
+    pathPrefix: '/api/appointments',
+  },
+  notification: {
+    target: process.env.NOTIFICATION_SERVICE_URL || 'http://notification-service:4009',
+    pathPrefix: '/api/notifications',
+  },
 };
 
 // Setup proxies

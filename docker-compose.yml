@@ -319,3 +319,69 @@ volumes:
     networks:
       - healthflow-network
     restart: unless-stopped
+
+  # ============================================
+  # SPRINT 4 SERVICES
+  # ============================================
+
+  appointment-service:
+    build: ./services/appointment-service
+    container_name: healthflow-appointment-service
+    ports:
+      - "4008:4008"
+    environment:
+      - PORT=4008
+      - NODE_ENV=${NODE_ENV:-development}
+      - DATABASE_URL=${DATABASE_URL}
+    depends_on:
+      - postgres
+    networks:
+      - healthflow-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4008/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  notification-service:
+    build: ./services/notification-service
+    container_name: healthflow-notification-service
+    ports:
+      - "4009:4009"
+    environment:
+      - PORT=4009
+      - NODE_ENV=${NODE_ENV:-development}
+      - DATABASE_URL=${DATABASE_URL}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASS=${SMTP_PASS}
+      - SMTP_FROM=${SMTP_FROM}
+      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID}
+      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN}
+      - TWILIO_PHONE_NUMBER=${TWILIO_PHONE_NUMBER}
+    depends_on:
+      - postgres
+    networks:
+      - healthflow-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4009/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  patient-portal:
+    build: ./portals/patient-portal
+    container_name: healthflow-patient-portal
+    ports:
+      - "3003:80"
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    depends_on:
+      - api-gateway
+    networks:
+      - healthflow-network
+    restart: unless-stopped
+

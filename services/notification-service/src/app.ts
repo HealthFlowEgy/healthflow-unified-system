@@ -1,42 +1,31 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import { doctorRouter } from './routes/doctorRoutes';
-import licenseRoutes from './routes/licenseRoutes';
-import templateRoutes from './routes/templateRoutes';
-import statisticsRoutes from './routes/statisticsRoutes';
+import notificationRoutes from './routes/notificationRoutes';
 import { logger } from './utils/logger';
 
 const app = express();
 
-// Middleware
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Request logging
 app.use((req, res, next) => {
   logger.info(`${req.method} ${req.path}`);
   next();
 });
 
-// Health check
 app.get('/health', (req, res) => {
   res.json({
     status: 'healthy',
-    service: 'doctor-service',
+    service: 'notification-service',
     timestamp: new Date().toISOString()
   });
 });
 
-// Routes
-app.use('/api/doctors', doctorRouter);
-app.use('/api/doctors', licenseRoutes);
-app.use('/api/doctors', templateRoutes);
-app.use('/api/doctors', statisticsRoutes);
+app.use('/api/notifications', notificationRoutes);
 
-// Error handling
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   logger.error('Unhandled error:', err);
   res.status(500).json({
@@ -46,4 +35,3 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 });
 
 export default app;
-

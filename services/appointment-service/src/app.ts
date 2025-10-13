@@ -1,10 +1,11 @@
+/**
+ * Appointment Service Application
+ */
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import { doctorRouter } from './routes/doctorRoutes';
-import licenseRoutes from './routes/licenseRoutes';
-import templateRoutes from './routes/templateRoutes';
-import statisticsRoutes from './routes/statisticsRoutes';
+import appointmentRoutes from './routes/appointmentRoutes';
 import { logger } from './utils/logger';
 
 const app = express();
@@ -25,16 +26,13 @@ app.use((req, res, next) => {
 app.get('/health', (req, res) => {
   res.json({
     status: 'healthy',
-    service: 'doctor-service',
+    service: 'appointment-service',
     timestamp: new Date().toISOString()
   });
 });
 
 // Routes
-app.use('/api/doctors', doctorRouter);
-app.use('/api/doctors', licenseRoutes);
-app.use('/api/doctors', templateRoutes);
-app.use('/api/doctors', statisticsRoutes);
+app.use('/api/appointments', appointmentRoutes);
 
 // Error handling
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
