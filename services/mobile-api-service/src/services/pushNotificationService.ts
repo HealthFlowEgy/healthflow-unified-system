@@ -1,10 +1,10 @@
 /**
  * Push Notification Service
- * Supports FCM (Firebase) and APNS (Apple)
+ * Handle APNs and FCM push notifications
  */
 
 import { db } from '../config/database';
-import { pushTokens } from '../models/schema';
+import { pushTokens, appEvents } from '../models/schema';
 import { eq, and } from 'drizzle-orm';
 import { logger } from '../utils/logger';
 
@@ -17,116 +17,218 @@ interface PushNotification {
   priority?: 'high' | 'normal';
 }
 
-class PushNotificationService {
-  async sendToUser(userId: string, notification: PushNotification, tenantId: string) {
-    try {
-      const tokens = await db
-        .select()
-        .from(pushTokens)
-        .where(
-          and(
-            eq(pushTokens.userId, userId),
-            eq(pushTokens.isActive, true),
-            eq(pushTokens.tenantId, tenantId)
-          )
-        );
+interface SendOptions {
+  userId?: string;
+  userIds?: string[];
+  platform?: 'ios' | 'android' | 'all';
+  topic?: string;
+}
 
+class PushNotificationService {
+  private apnsClient: any; // APNs client
+  private fcmClient: any; // FCM client
+
+  constructor() {
+    this.initializeAPNs();
+    this.initializeFCM();
+  }
+
+  private initializeAPNs() {
+    // Initialize APNs client
+    // In production, use node-apn or similar library
+    logger.info('APNs client initialized (mock)');
+  }
+
+  private initializeFCM() {
+    // Initialize FCM client
+    // In production, use firebase-admin
+    logger.info('FCM client initialized (mock)');
+  }
+
+  async sendNotification(notification: PushNotification, options: SendOptions): Promise<{ success: number; failed: number }> {
+    try {
+      const tokens = await this.getDeviceTokens(options);
+      
       if (tokens.length === 0) {
-        logger.warn(`No push tokens found for user: ${userId}`);
-        return { success: false, reason: 'no_tokens' };
+        logger.warn('No device tokens found for notification');
+        return { success: 0, failed: 0 };
       }
 
-      // Mock implementation - in production, integrate with FCM/APNS
-      logger.info(`Would send push notification to ${tokens.length} devices for user ${userId}`);
-      logger.info(`Notification: ${notification.title} - ${notification.body}`);
+      const results = await Promise.allSettled(
+        tokens.map(token => this.sendToDevice(token, notification))
+      );
 
-      return {
-        success: true,
-        totalTokens: tokens.length,
-        successCount: tokens.length,
-        failureCount: 0
-      };
+      const success = results.filter(r => r.status === 'fulfilled').length;
+      const failed = results.filter(r => r.status === 'rejected').length;
+
+      logger.info(`Push notification sent: ${success} succeeded, ${failed} failed`);
+      
+      // Log event
+      await this.logNotificationEvent(notification, options, { success, failed });
+
+      return { success, failed };
     } catch (error) {
       logger.error('Failed to send push notification:', error);
       throw error;
     }
   }
 
-  async registerToken(data: {
-    userId: string;
-    token: string;
-    deviceId: string;
-    deviceName?: string;
-    deviceType: string;
-    platform: string;
-    platformVersion?: string;
-    appVersion?: string;
-    tenantId: string;
-  }) {
+  private async getDeviceTokens(options: SendOptions): Promise<any[]> {
     try {
-      const [existing] = await db
-        .select()
-        .from(pushTokens)
-        .where(
+      let query = db.select().from(pushTokens);
+
+      if (options.userId) {
+        query = query.where(eq(pushTokens.userId, options.userId));
+      } else if (options.userIds && options.userIds.length > 0) {
+        // Filter by multiple user IDs
+        query = query.where(
           and(
-            eq(pushTokens.userId, data.userId),
-            eq(pushTokens.deviceId, data.deviceId),
-            eq(pushTokens.tenantId, data.tenantId)
+            ...options.userIds.map(id => eq(pushTokens.userId, id))
           )
         );
+      }
 
-      if (existing) {
-        const [updated] = await db
-          .update(pushTokens)
-          .set({
-            token: data.token,
-            deviceName: data.deviceName,
-            deviceType: data.deviceType,
-            platform: data.platform,
-            platformVersion: data.platformVersion,
-            appVersion: data.appVersion,
-            isActive: true,
-            lastUsedAt: new Date(),
-            updatedAt: new Date()
-          })
-          .where(eq(pushTokens.id, existing.id))
-          .returning();
+      if (options.platform && options.platform !== 'all') {
+        query = query.where(eq(pushTokens.platform, options.platform));
+      }
 
-        logger.info(`Updated push token for device: ${data.deviceId}`);
-        return updated;
-      } else {
-        const [created] = await db
-          .insert(pushTokens)
-          .values(data)
-          .returning();
+      const tokens = await query;
+      return tokens.filter(t => t.isActive);
+    } catch (error) {
+      logger.error('Failed to get device tokens:', error);
+      return [];
+    }
+  }
 
-        logger.info(`Registered new push token for device: ${data.deviceId}`);
-        return created;
+  private async sendToDevice(token: any, notification: PushNotification): Promise<void> {
+    try {
+      if (token.platform === 'ios') {
+        await this.sendAPNs(token.token, notification);
+      } else if (token.platform === 'android') {
+        await this.sendFCM(token.token, notification);
       }
     } catch (error) {
-      logger.error('Failed to register push token:', error);
+      logger.error(`Failed to send to device ${token.id}:`, error);
+      
+      // Mark token as inactive if it's invalid
+      if (this.isInvalidTokenError(error)) {
+        await db.update(pushTokens)
+          .set({ isActive: false })
+          .where(eq(pushTokens.id, token.id));
+      }
+      
       throw error;
     }
   }
 
-  async unregisterToken(userId: string, deviceId: string, tenantId: string) {
-    try {
-      await db
-        .update(pushTokens)
-        .set({ isActive: false, updatedAt: new Date() })
-        .where(
-          and(
-            eq(pushTokens.userId, userId),
-            eq(pushTokens.deviceId, deviceId),
-            eq(pushTokens.tenantId, tenantId)
-          )
-        );
+  private async sendAPNs(token: string, notification: PushNotification): Promise<void> {
+    // Mock APNs send
+    // In production, use apnsClient.send()
+    logger.info(`Sending APNs notification to ${token.substring(0, 10)}...`);
+    
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 100));
+  }
 
-      logger.info(`Unregistered push token for device: ${deviceId}`);
+  private async sendFCM(token: string, notification: PushNotification): Promise<void> {
+    // Mock FCM send
+    // In production, use fcmClient.send()
+    logger.info(`Sending FCM notification to ${token.substring(0, 10)}...`);
+    
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 100));
+  }
+
+  private isInvalidTokenError(error: any): boolean {
+    // Check if error indicates invalid token
+    return error?.code === 'InvalidToken' || error?.code === 'Unregistered';
+  }
+
+  private async logNotificationEvent(
+    notification: PushNotification,
+    options: SendOptions,
+    results: { success: number; failed: number }
+  ): Promise<void> {
+    try {
+      await db.insert(appEvents).values({
+        eventType: 'push_notification_sent',
+        eventCategory: 'notification',
+        eventData: {
+          notification,
+          options,
+          results
+        },
+        timestamp: new Date()
+      });
     } catch (error) {
-      logger.error('Failed to unregister push token:', error);
-      throw error;
+      logger.error('Failed to log notification event:', error);
     }
+  }
+
+  // Notification templates
+  async sendAppointmentReminder(userId: string, appointmentData: any): Promise<void> {
+    await this.sendNotification(
+      {
+        title: 'Appointment Reminder',
+        body: `Your appointment with Dr. ${appointmentData.doctorName} is in ${appointmentData.timeUntil}`,
+        data: {
+          type: 'appointment_reminder',
+          appointmentId: appointmentData.id
+        },
+        badge: 1,
+        sound: 'default'
+      },
+      { userId, platform: 'all' }
+    );
+  }
+
+  async sendPrescriptionReady(userId: string, prescriptionData: any): Promise<void> {
+    await this.sendNotification(
+      {
+        title: 'Prescription Ready',
+        body: `Your prescription #${prescriptionData.number} is ready for pickup`,
+        data: {
+          type: 'prescription_ready',
+          prescriptionId: prescriptionData.id
+        },
+        badge: 1,
+        sound: 'default'
+      },
+      { userId, platform: 'all' }
+    );
+  }
+
+  async sendLabResultsReady(userId: string, labData: any): Promise<void> {
+    await this.sendNotification(
+      {
+        title: 'Lab Results Available',
+        body: 'Your lab results are now available',
+        data: {
+          type: 'lab_results_ready',
+          labOrderId: labData.id
+        },
+        badge: 1,
+        sound: 'default'
+      },
+      { userId, platform: 'all' }
+    );
+  }
+
+  async sendChatMessage(userId: string, messageData: any): Promise<void> {
+    await this.sendNotification(
+      {
+        title: `New message from ${messageData.senderName}`,
+        body: messageData.preview,
+        data: {
+          type: 'chat_message',
+          roomId: messageData.roomId,
+          messageId: messageData.id
+        },
+        badge: 1,
+        sound: 'default'
+      },
+      { userId, platform: 'all' }
+    );
   }
 }
 
