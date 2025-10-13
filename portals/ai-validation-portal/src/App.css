@@ -1,0 +1,375 @@
+@import "tailwindcss";
+
+/* HealthFlow Custom CSS Variables */
+:root {
+  --healthflow-primary: #1e3a8a;     /* Deep blue */
+  --healthflow-secondary: #d97706;    /* Gold/amber */
+  --healthflow-accent: #f59e0b;       /* Lighter gold */
+  --healthflow-dark: #1e293b;         /* Dark slate */
+  --healthflow-light: #f8fafc;        /* Light gray */
+  --healthflow-success: #059669;      /* Green */
+  --healthflow-warning: #d97706;       /* Orange */
+  --healthflow-error: #dc2626;        /* Red */
+  --healthflow-info: #0284c7;         /* Blue */
+}
+
+/* Global Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  background-color: var(--healthflow-light);
+  color: var(--healthflow-dark);
+  line-height: 1.6;
+}
+
+/* HealthFlow Brand Colors */
+.bg-healthflow-primary {
+  background-color: var(--healthflow-primary);
+}
+
+.bg-healthflow-secondary {
+  background-color: var(--healthflow-secondary);
+}
+
+.bg-healthflow-accent {
+  background-color: var(--healthflow-accent);
+}
+
+.text-healthflow-primary {
+  color: var(--healthflow-primary);
+}
+
+.text-healthflow-secondary {
+  color: var(--healthflow-secondary);
+}
+
+.text-healthflow-accent {
+  color: var(--healthflow-accent);
+}
+
+.border-healthflow-primary {
+  border-color: var(--healthflow-primary);
+}
+
+.border-healthflow-secondary {
+  border-color: var(--healthflow-secondary);
+}
+
+/* Custom Components */
+.healthflow-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  transition: all 0.3s ease;
+}
+
+.healthflow-card:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  transform: translateY(-2px);
+}
+
+.healthflow-button-primary {
+  background: linear-gradient(135deg, var(--healthflow-primary) 0%, #3b82f6 100%);
+  color: white;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px -1px rgba(30, 58, 138, 0.3);
+}
+
+.healthflow-button-primary:hover {
+  background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
+  box-shadow: 0 6px 8px -1px rgba(30, 58, 138, 0.4);
+  transform: translateY(-1px);
+}
+
+.healthflow-button-secondary {
+  background: linear-gradient(135deg, var(--healthflow-secondary) 0%, var(--healthflow-accent) 100%);
+  color: white;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px -1px rgba(217, 119, 6, 0.3);
+}
+
+.healthflow-button-secondary:hover {
+  background: linear-gradient(135deg, #b45309 0%, #d97706 100%);
+  box-shadow: 0 6px 8px -1px rgba(217, 119, 6, 0.4);
+  transform: translateY(-1px);
+}
+
+.healthflow-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.healthflow-input:focus {
+  outline: none;
+  border-color: var(--healthflow-primary);
+  box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
+}
+
+.healthflow-sidebar {
+  background: linear-gradient(180deg, var(--healthflow-primary) 0%, #1e40af 100%);
+  color: white;
+  min-height: 100vh;
+  width: 280px;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 1000;
+  box-shadow: 4px 0 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.healthflow-main-content {
+  margin-left: 280px;
+  min-height: 100vh;
+  background: var(--healthflow-light);
+  padding: 24px;
+}
+
+.healthflow-stat-card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border-left: 4px solid var(--healthflow-secondary);
+  transition: all 0.3s ease;
+}
+
+.healthflow-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 12px -1px rgba(0, 0, 0, 0.15);
+}
+
+.healthflow-stat-number {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--healthflow-primary);
+  line-height: 1;
+}
+
+.healthflow-stat-label {
+  font-size: 0.875rem;
+  color: #64748b;
+  font-weight: 500;
+  margin-top: 8px;
+}
+
+/* Status Colors */
+.status-uploaded {
+  background-color: #dbeafe;
+  color: #1e40af;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.status-pending {
+  background-color: #fef3c7;
+  color: #d97706;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.status-reviewed {
+  background-color: #d1fae5;
+  color: #059669;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.status-alert {
+  background-color: #fee2e2;
+  color: #dc2626;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.6s ease-out;
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.slide-in-left {
+  animation: slideInLeft 0.5s ease-out;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .healthflow-sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+  
+  .healthflow-sidebar.mobile-open {
+    transform: translateX(0);
+  }
+  
+  .healthflow-main-content {
+    margin-left: 0;
+    padding: 16px;
+  }
+  
+  .healthflow-stat-number {
+    font-size: 2rem;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--healthflow-primary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #1e40af;
+}
+
+/* Loading Spinner */
+.healthflow-spinner {
+  border: 3px solid #f3f4f6;
+  border-top: 3px solid var(--healthflow-primary);
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Chart Styles */
+.recharts-wrapper {
+  font-family: inherit;
+}
+
+.recharts-cartesian-axis-tick-value {
+  font-size: 12px;
+  fill: #64748b;
+}
+
+.recharts-legend-item-text {
+  color: #64748b !important;
+  font-size: 14px;
+}
+
+/* Table Styles */
+.healthflow-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.healthflow-table th {
+  background: var(--healthflow-primary);
+  color: white;
+  padding: 16px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.healthflow-table td {
+  padding: 16px;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 14px;
+}
+
+.healthflow-table tr:hover {
+  background-color: #f8fafc;
+}
+
+/* Upload Area */
+.healthflow-upload-area {
+  border: 2px dashed #cbd5e1;
+  border-radius: 12px;
+  padding: 48px 24px;
+  text-align: center;
+  background: #fafafa;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.healthflow-upload-area:hover {
+  border-color: var(--healthflow-primary);
+  background: #f0f9ff;
+}
+
+.healthflow-upload-area.dragover {
+  border-color: var(--healthflow-secondary);
+  background: #fffbeb;
+}
+

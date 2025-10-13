@@ -1,0 +1,33 @@
+{
+  "name": "@healthflow/database",
+  "version": "1.0.0",
+  "description": "HealthFlow Database Schema and Migrations",
+  "main": "index.js",
+  "scripts": {
+    "migrate": "ts-node migrate.ts",
+    "seed": "ts-node seeds/index.ts",
+    "generate": "drizzle-kit generate:pg",
+    "studio": "drizzle-kit studio"
+  },
+  "keywords": [
+    "healthflow",
+    "database",
+    "drizzle"
+  ],
+  "author": "HealthFlow Team",
+  "license": "MIT",
+  "dependencies": {
+    "drizzle-orm": "^0.29.1",
+    "postgres": "^3.4.3",
+    "dotenv": "^16.3.1",
+    "bcryptjs": "^2.4.3"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^20.10.5",
+    "drizzle-kit": "^0.20.6",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  }
+}
+

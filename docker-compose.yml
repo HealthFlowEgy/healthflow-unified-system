@@ -1,0 +1,204 @@
+version: '3.8'
+
+services:
+  # ============================================
+  # DATABASE & CACHE
+  # ============================================
+  
+  postgres:
+    image: postgres:15-alpine
+    container_name: healthflow-postgres
+    environment:
+      POSTGRES_DB: healthflow
+      POSTGRES_USER: healthflow
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-healthflow_password_change_in_prod}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./shared/database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U healthflow"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - healthflow-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: healthflow-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - healthflow-network
+
+  # ============================================
+  # BACKEND SERVICES
+  # ============================================
+
+  auth-service:
+    build:
+      context: ./services/auth-service
+      dockerfile: Dockerfile
+    container_name: healthflow-auth-service
+    environment:
+      PORT: 4003
+      FLASK_ENV: ${FLASK_ENV:-development}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-dev-secret-key-change-in-production}
+      JWT_ACCESS_TOKEN_EXPIRES: 900
+      JWT_REFRESH_TOKEN_EXPIRES: 604800
+      DATABASE_URL: postgresql://healthflow:${POSTGRES_PASSWORD:-healthflow_password_change_in_prod}@postgres:5432/healthflow
+      REDIS_URL: redis://redis:6379/0
+      ALLOWED_ORIGINS: http://localhost:3000,http://localhost:3001,http://localhost:3002,http://localhost:8000
+    ports:
+      - "4003:4003"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - healthflow-network
+    restart: unless-stopped
+
+  ai-validation-service:
+    build:
+      context: ./services/ai-validation-service
+      dockerfile: Dockerfile
+    container_name: healthflow-ai-validation
+    environment:
+      PORT: 5000
+      FLASK_ENV: ${FLASK_ENV:-development}
+      SECRET_KEY: ${SECRET_KEY:-dev-secret-key}
+      DATABASE_URL: postgresql://healthflow:${POSTGRES_PASSWORD:-healthflow_password_change_in_prod}@postgres:5432/healthflow
+      ALLOWED_ORIGINS: http://localhost:3000,http://localhost:3001,http://localhost:3002,http://localhost:8000
+    ports:
+      - "5000:5000"
+    volumes:
+      - ai_uploads:/tmp/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - healthflow-network
+    restart: unless-stopped
+
+  pharmacy-service:
+    build:
+      context: ./services/pharmacy-service
+      dockerfile: Dockerfile
+    container_name: healthflow-pharmacy-service
+    environment:
+      PORT: 4001
+      NODE_ENV: ${NODE_ENV:-development}
+      DATABASE_URL: postgresql://healthflow:${POSTGRES_PASSWORD:-healthflow_password_change_in_prod}@postgres:5432/healthflow
+      REDIS_URL: redis://redis:6379/0
+      JWT_SECRET: ${JWT_SECRET_KEY:-dev-secret-key-change-in-production}
+    ports:
+      - "4001:4001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - healthflow-network
+    restart: unless-stopped
+
+  api-gateway:
+    build:
+      context: ./services/api-gateway
+      dockerfile: Dockerfile
+    container_name: healthflow-api-gateway
+    environment:
+      PORT: 8000
+      NODE_ENV: ${NODE_ENV:-development}
+      JWT_SECRET: ${JWT_SECRET_KEY:-dev-secret-key-change-in-production}
+      REDIS_URL: redis://redis:6379/0
+      # Service URLs
+      AUTH_SERVICE_URL: http://auth-service:4003
+      AI_VALIDATION_SERVICE_URL: http://ai-validation-service:5000
+      PHARMACY_SERVICE_URL: http://pharmacy-service:4001
+      # CORS
+      ALLOWED_ORIGINS: http://localhost:3000,http://localhost:3001,http://localhost:3002
+    ports:
+      - "8000:8000"
+    depends_on:
+      - auth-service
+      - ai-validation-service
+      - pharmacy-service
+      - redis
+    networks:
+      - healthflow-network
+    restart: unless-stopped
+
+  # ============================================
+  # FRONTEND PORTALS
+  # ============================================
+
+  ai-validation-portal:
+    build:
+      context: ./portals/ai-validation-portal
+      dockerfile: Dockerfile
+    container_name: healthflow-ai-portal
+    environment:
+      VITE_API_URL: http://localhost:8000
+      VITE_AUTH_SERVICE_URL: http://localhost:8000/api/auth
+      VITE_VALIDATION_SERVICE_URL: http://localhost:8000/api/validation
+    ports:
+      - "3001:80"
+    depends_on:
+      - api-gateway
+    networks:
+      - healthflow-network
+    restart: unless-stopped
+
+  pharmacy-portal:
+    build:
+      context: ./portals/pharmacy-portal
+      dockerfile: Dockerfile
+    container_name: healthflow-pharmacy-portal
+    environment:
+      VITE_API_URL: http://localhost:8000
+      VITE_AUTH_SERVICE_URL: http://localhost:8000/api/auth
+      VITE_PHARMACY_SERVICE_URL: http://localhost:8000/api/pharmacy
+    ports:
+      - "3002:80"
+    depends_on:
+      - api-gateway
+    networks:
+      - healthflow-network
+    restart: unless-stopped
+
+  regulatory-portal:
+    build:
+      context: ./portals/regulatory-portal
+      dockerfile: Dockerfile
+    container_name: healthflow-regulatory-portal
+    environment:
+      VITE_API_URL: http://localhost:8000
+    ports:
+      - "3004:80"
+    depends_on:
+      - api-gateway
+    networks:
+      - healthflow-network
+    restart: unless-stopped
+
+networks:
+  healthflow-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  ai_uploads:
+
