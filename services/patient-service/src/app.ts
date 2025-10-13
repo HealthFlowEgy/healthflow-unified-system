@@ -1,21 +1,42 @@
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
+import { patientRouter } from './routes/patientRoutes';
+import { logger } from './utils/logger';
 
 const app = express();
 
+// Middleware
+app.use(helmet());
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
+// Request logging
+app.use((req, res, next) => {
+  logger.info(`${req.method} ${req.path}`);
+  next();
+});
+
+// Health check
 app.get('/health', (req, res) => {
-  res.json({ status: 'healthy', service: 'patient-service' });
+  res.json({
+    status: 'healthy',
+    service: 'patient-service',
+    timestamp: new Date().toISOString()
+  });
 });
 
-app.get('/api/patients', (req, res) => {
-  res.json({ success: true, data: [], message: 'Patient list endpoint' });
-});
+// Routes
+app.use('/api/patients', patientRouter);
 
-app.post('/api/patients', (req, res) => {
-  res.status(201).json({ success: true, message: 'Patient created' });
+// Error handling
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  logger.error('Unhandled error:', err);
+  res.status(500).json({
+    success: false,
+    error: 'Internal server error'
+  });
 });
 
 export default app;

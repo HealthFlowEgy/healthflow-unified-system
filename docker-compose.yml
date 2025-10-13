@@ -306,3 +306,16 @@ volumes:
       interval: 30s
       timeout: 10s
       retries: 3
+
+  doctor-portal:
+    build: ./portals/doctor-portal
+    container_name: healthflow-doctor-portal
+    ports:
+      - "3000:80"
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    depends_on:
+      - api-gateway
+    networks:
+      - healthflow-network
+    restart: unless-stopped
