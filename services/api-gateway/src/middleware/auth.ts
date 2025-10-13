@@ -4,11 +4,21 @@ import { logger } from '../utils/logger';
 
 // Public endpoints that don't require authentication
 const PUBLIC_ENDPOINTS = [
+  // New unified auth endpoints
+  '/api/auth/register',
+  '/api/auth/login',
+  '/api/auth/refresh',
+  '/api/auth/verify-token',
+  '/api/auth/logout',
+  '/api/auth/info',
+  // Legacy auth endpoints (backward compatibility)
   '/api/v2/auth/register',
   '/api/v2/auth/login',
   '/api/v2/auth/forgot-password',
   '/api/v2/auth/reset-password',
   '/api/v2/auth/verify-email',
+  '/api/v2/auth/refresh',
+  // System endpoints
   '/health',
   '/metrics'
 ];

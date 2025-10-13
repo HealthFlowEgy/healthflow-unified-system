@@ -117,31 +117,36 @@ app.use('/api/', authenticateRequest);
 
 // Service routing configuration
 const serviceRoutes = {
+  // Auth Service (from Repo 1) - Unified authentication for all services
   auth: {
-    target: process.env.AUTH_SERVICE_URL || 'http://localhost:4003',
-    pathPrefix: '/api/v2/auth',
-    pathRewrite: { '^/api/v2/auth': '/api/v2/auth' },
-    publicPaths: ['/register', '/login', '/forgot-password', '/reset-password', '/verify-email']
+    target: process.env.AUTH_SERVICE_URL || 'http://auth-service:4003',
+    pathPrefix: '/api/auth',
+    pathRewrite: { '^/api/auth': '/api/auth' },
+    publicPaths: ['/register', '/login', '/refresh', '/verify-token', '/logout', '/info']
   },
-  provider: {
-    target: process.env.PROVIDER_SERVICE_URL || 'http://localhost:5000',
-    pathPrefix: '/api/v2/provider',
-    pathRewrite: { '^/api/v2/provider': '/api' }
+  // AI Validation Service (from Repo 1) - OCR and prescription validation
+  validation: {
+    target: process.env.AI_VALIDATION_SERVICE_URL || 'http://ai-validation-service:5000',
+    pathPrefix: '/api/validation',
+    pathRewrite: { '^/api/validation': '/api/validation' }
   },
-  regulatory: {
-    target: process.env.REGULATORY_SERVICE_URL || 'http://localhost:4000',
-    pathPrefix: '/api/v2/regulatory',
-    pathRewrite: { '^/api/v2/regulatory': '/api/v2' }
-  },
+  // Pharmacy Service (from Repo 3) - Pharmacy operations
   pharmacy: {
-    target: process.env.PHARMACY_SERVICE_URL || 'http://localhost:4001',
-    pathPrefix: '/api/v2/pharmacy',
-    pathRewrite: { '^/api/v2/pharmacy': '/api/v2' }
+    target: process.env.PHARMACY_SERVICE_URL || 'http://pharmacy-service:4001',
+    pathPrefix: '/api/pharmacy',
+    pathRewrite: { '^/api/pharmacy': '/api/pharmacy' }
   },
-  admin: {
-    target: process.env.ADMIN_SERVICE_URL || 'http://localhost:4002',
-    pathPrefix: '/api/v2/admin',
-    pathRewrite: { '^/api/v2/admin': '/api/v2' }
+  // Legacy routes for backward compatibility
+  authV2: {
+    target: process.env.AUTH_SERVICE_URL || 'http://auth-service:4003',
+    pathPrefix: '/api/v2/auth',
+    pathRewrite: { '^/api/v2/auth': '/api/auth' },
+    publicPaths: ['/register', '/login', '/refresh', '/verify-token']
+  },
+  pharmacyV2: {
+    target: process.env.PHARMACY_SERVICE_URL || 'http://pharmacy-service:4001',
+    pathPrefix: '/api/v2/pharmacy',
+    pathRewrite: { '^/api/v2/pharmacy': '/api/pharmacy' }
   }
 };
 
