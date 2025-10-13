@@ -1,0 +1,15 @@
+
+// Sprint 3 Routes - Add these to the service routing
+const services = {
+  // ... existing routes ...
+  patient: {
+    target: process.env.PATIENT_SERVICE_URL || 'http://patient-service:4006',
+    pathPrefix: '/api/patients',
+    pathRewrite: { '^/api/patients': '/api/patients' }
+  },
+  doctor: {
+    target: process.env.DOCTOR_SERVICE_URL || 'http://doctor-service:4007',
+    pathPrefix: '/api/doctors',
+    pathRewrite: { '^/api/doctors': '/api/doctors' }
+  }
+};

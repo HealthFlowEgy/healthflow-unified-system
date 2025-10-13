@@ -266,3 +266,43 @@ volumes:
       interval: 30s
       timeout: 10s
       retries: 3
+
+  patient-service:
+    build: ./services/patient-service
+    container_name: healthflow-patient-service
+    ports:
+      - "4006:4006"
+    environment:
+      - PORT=4006
+      - NODE_ENV=${NODE_ENV:-development}
+      - DATABASE_URL=${DATABASE_URL}
+    depends_on:
+      - postgres
+    networks:
+      - healthflow-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4006/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  doctor-service:
+    build: ./services/doctor-service
+    container_name: healthflow-doctor-service
+    ports:
+      - "4007:4007"
+    environment:
+      - PORT=4007
+      - NODE_ENV=${NODE_ENV:-development}
+      - DATABASE_URL=${DATABASE_URL}
+    depends_on:
+      - postgres
+    networks:
+      - healthflow-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4007/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
