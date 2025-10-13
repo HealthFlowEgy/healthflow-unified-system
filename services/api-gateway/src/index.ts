@@ -113,3 +113,25 @@ app.use('/api/analytics', createProxyMiddleware({
   changeOrigin: true,
   pathRewrite: { '^/api/analytics': '/api/analytics' }
 }));
+
+// Sprint 6 Routes
+app.use('/api/mobile', createProxyMiddleware({
+  target: 'http://mobile-api-service:4013',
+  changeOrigin: true
+}));
+
+app.use('/api/payments', createProxyMiddleware({
+  target: 'http://payment-service:4015',
+  changeOrigin: true
+}));
+
+app.use('/api/search', createProxyMiddleware({
+  target: 'http://search-service:4016',
+  changeOrigin: true
+}));
+
+app.use('/ws', createProxyMiddleware({
+  target: 'http://websocket-service:4014',
+  changeOrigin: true,
+  ws: true
+}));

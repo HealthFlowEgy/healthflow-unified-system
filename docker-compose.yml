@@ -452,3 +452,90 @@ volumes:
       - api-gateway
     networks:
       - healthflow-network
+
+  # Sprint 6 Services
+  mobile-api-service:
+    build: ./services/mobile-api-service
+    ports:
+      - "4013:4013"
+    environment:
+      - DATABASE_URL=postgresql://healthflow:healthflow@postgres:5432/healthflow
+      - REDIS_URL=redis://redis:6379
+      - PORT=4013
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - healthflow-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4013/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  websocket-service:
+    build: ./services/websocket-service
+    ports:
+      - "4014:4014"
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - PORT=4014
+    depends_on:
+      - redis
+    networks:
+      - healthflow-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4014/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  payment-service:
+    build: ./services/payment-service
+    ports:
+      - "4015:4015"
+    environment:
+      - DATABASE_URL=postgresql://healthflow:healthflow@postgres:5432/healthflow
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - PAYPAL_CLIENT_ID=${PAYPAL_CLIENT_ID}
+      - PAYPAL_CLIENT_SECRET=${PAYPAL_CLIENT_SECRET}
+      - PORT=4015
+    depends_on:
+      - postgres
+    networks:
+      - healthflow-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4015/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  search-service:
+    build: ./services/search-service
+    ports:
+      - "4016:4016"
+    environment:
+      - ELASTICSEARCH_URL=${ELASTICSEARCH_URL:-http://elasticsearch:9200}
+      - PORT=4016
+    networks:
+      - healthflow-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4016/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  monitoring-service:
+    build: ./services/monitoring-service
+    ports:
+      - "9090:9090"
+    environment:
+      - SENTRY_DSN=${SENTRY_DSN}
+      - PORT=9090
+    networks:
+      - healthflow-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9090/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
