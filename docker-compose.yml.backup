@@ -113,49 +113,6 @@ services:
       - healthflow-network
     restart: unless-stopped
 
-
-  prescription-service:
-    build:
-      context: ./services/prescription-service
-      dockerfile: Dockerfile
-    container_name: healthflow-prescription-service
-    environment:
-      PORT: 4002
-      NODE_ENV: ${NODE_ENV:-development}
-      DATABASE_URL: postgresql://healthflow:${POSTGRES_PASSWORD:-healthflow_password_change_in_prod}@postgres:5432/healthflow
-      AUTH_SERVICE_URL: http://auth-service:4003
-      API_GATEWAY_URL: http://api-gateway:8000
-      LOG_LEVEL: ${LOG_LEVEL:-info}
-    ports:
-      - "4002:4002"
-    depends_on:
-      postgres:
-        condition: service_healthy
-    networks:
-      - healthflow-network
-    restart: unless-stopped
-
-  medicine-service:
-    build:
-      context: ./services/medicine-service
-      dockerfile: Dockerfile
-    container_name: healthflow-medicine-service
-    environment:
-      PORT: 4004
-      NODE_ENV: ${NODE_ENV:-development}
-      DATABASE_URL: postgresql://healthflow:${POSTGRES_PASSWORD:-healthflow_password_change_in_prod}@postgres:5432/healthflow
-      AUTH_SERVICE_URL: http://auth-service:4003
-      API_GATEWAY_URL: http://api-gateway:8000
-      LOG_LEVEL: ${LOG_LEVEL:-info}
-    ports:
-      - "4004:4004"
-    depends_on:
-      postgres:
-        condition: service_healthy
-    networks:
-      - healthflow-network
-    restart: unless-stopped
-
   api-gateway:
     build:
       context: ./services/api-gateway

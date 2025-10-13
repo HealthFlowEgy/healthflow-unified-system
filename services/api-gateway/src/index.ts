@@ -136,6 +136,24 @@ const serviceRoutes = {
     pathPrefix: '/api/pharmacy',
     pathRewrite: { '^/api/pharmacy': '/api/pharmacy' }
   },
+  // Prescription Service (Sprint 2) - Prescription management
+  prescription: {
+    target: process.env.PRESCRIPTION_SERVICE_URL || 'http://prescription-service:4002',
+    pathPrefix: '/api/prescription',
+    pathRewrite: { '^/api/prescription': '/api/prescription' }
+  },
+  // Medicine Service (Sprint 2) - Medicine catalog and information
+  medicine: {
+    target: process.env.MEDICINE_SERVICE_URL || 'http://medicine-service:4004',
+    pathPrefix: '/api/medicine',
+    pathRewrite: { '^/api/medicine': '/api/medicine' }
+  },
+  // Regulatory Service (Sprint 2) - EDA compliance and monitoring
+  regulatory: {
+    target: process.env.REGULATORY_SERVICE_URL || 'http://regulatory-service:4005',
+    pathPrefix: '/api/regulatory',
+    pathRewrite: { '^/api/regulatory': '/api/regulatory' }
+  },
   // Legacy routes for backward compatibility
   authV2: {
     target: process.env.AUTH_SERVICE_URL || 'http://auth-service:4003',
