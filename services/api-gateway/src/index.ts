@@ -76,3 +76,40 @@ Object.entries(services).forEach(([name, config]) => {
 app.listen(PORT, () => {
   console.log(`🚀 API Gateway running on port ${PORT}`);
 });
+
+// Sprint 5 Services
+app.use('/api/files', createProxyMiddleware({
+  target: 'http://file-service:4010',
+  changeOrigin: true,
+  pathRewrite: { '^/api/files': '/api/files' }
+}));
+
+app.use('/api/users', createProxyMiddleware({
+  target: 'http://user-management-service:4011',
+  changeOrigin: true,
+  pathRewrite: { '^/api/users': '/api/users' }
+}));
+
+app.use('/api/roles', createProxyMiddleware({
+  target: 'http://user-management-service:4011',
+  changeOrigin: true,
+  pathRewrite: { '^/api/roles': '/api/roles' }
+}));
+
+app.use('/api/organizations', createProxyMiddleware({
+  target: 'http://user-management-service:4011',
+  changeOrigin: true,
+  pathRewrite: { '^/api/organizations': '/api/organizations' }
+}));
+
+app.use('/api/dashboards', createProxyMiddleware({
+  target: 'http://bi-dashboard-service:4012',
+  changeOrigin: true,
+  pathRewrite: { '^/api/dashboards': '/api/dashboards' }
+}));
+
+app.use('/api/analytics', createProxyMiddleware({
+  target: 'http://bi-dashboard-service:4012',
+  changeOrigin: true,
+  pathRewrite: { '^/api/analytics': '/api/analytics' }
+}));

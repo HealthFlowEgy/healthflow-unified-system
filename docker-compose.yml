@@ -385,3 +385,70 @@ volumes:
       - healthflow-network
     restart: unless-stopped
 
+
+  # Sprint 5 Services
+  file-service:
+    build: ./services/file-service
+    ports:
+      - "4010:4010"
+    environment:
+      - DATABASE_URL=postgresql://healthflow:healthflow123@postgres:5432/healthflow
+      - PORT=4010
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - AWS_S3_BUCKET=${AWS_S3_BUCKET:-healthflow-files}
+    depends_on:
+      - postgres
+    networks:
+      - healthflow-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4010/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  user-management-service:
+    build: ./services/user-management-service
+    ports:
+      - "4011:4011"
+    environment:
+      - DATABASE_URL=postgresql://healthflow:healthflow123@postgres:5432/healthflow
+      - PORT=4011
+    depends_on:
+      - postgres
+    networks:
+      - healthflow-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4011/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  bi-dashboard-service:
+    build: ./services/bi-dashboard-service
+    ports:
+      - "4012:4012"
+    environment:
+      - DATABASE_URL=postgresql://healthflow:healthflow123@postgres:5432/healthflow
+      - PORT=4012
+    depends_on:
+      - postgres
+    networks:
+      - healthflow-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4012/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  admin-portal:
+    build: ./portals/admin-portal
+    ports:
+      - "3004:80"
+    environment:
+      - VITE_API_URL=http://localhost:8000/api
+    depends_on:
+      - api-gateway
+    networks:
+      - healthflow-network
