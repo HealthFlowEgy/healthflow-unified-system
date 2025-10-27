@@ -5,7 +5,7 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-RUN apk add --no-cache tini
+RUN apk add --no-cache tini wget
 
 # Copy package files
 COPY package*.json ./
@@ -21,7 +21,7 @@ RUN set -ex && \
     done
 
 # Install ts-node and typescript globally
-RUN npm install -g ts-node typescript 2>/dev/null || true
+RUN npm install -g ts-node typescript
 
 # Copy all project directories
 COPY . .
@@ -33,8 +33,8 @@ RUN if [ -f tsconfig.json ]; then \
 
 # Try to build, fallback to ts-node
 RUN if [ -f tsconfig.json ]; then \
-      npm run build 2>/dev/null || \
-      npx tsc -p tsconfig.build.json 2>/dev/null || \
+      npm run build || \
+      npx tsc -p tsconfig.build.json || \
       echo "Build failed, will use ts-node at runtime"; \
     fi
 

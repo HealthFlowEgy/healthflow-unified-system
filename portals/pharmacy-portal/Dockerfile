@@ -1,6 +1,7 @@
 # Ultra-Optimized Portal Dockerfile
 # Reduces build time from 20-40s to <10s
 # Multi-stage build with nginx for production
+# Version: 1.1 (with Copilot review fixes)
 
 # Stage 1: Build
 FROM node:18-alpine AS builder
@@ -32,6 +33,9 @@ RUN npm run build
 # Stage 2: Production
 FROM nginx:alpine
 
+# Install wget for health check
+RUN apk add --no-cache wget
+
 # Copy built files from builder
 COPY --from=builder /app/dist /usr/share/nginx/html
 COPY --from=builder /app/nginx.conf /etc/nginx/conf.d/default.conf 2>/dev/null || \
@@ -41,6 +45,7 @@ COPY --from=builder /app/nginx.conf /etc/nginx/conf.d/default.conf 2>/dev/null |
 EXPOSE 80
 
 # Health check
+# Fixed: wget is now installed via apk add above
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD wget --quiet --tries=1 --spider http://localhost:80/ || exit 1
 

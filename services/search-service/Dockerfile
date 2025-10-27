@@ -5,7 +5,7 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-RUN apk add --no-cache tini
+RUN apk add --no-cache tini wget
 
 # Copy package files
 COPY package*.json ./
@@ -84,8 +84,8 @@ RUN echo '{ \
 }' > tsconfig.build.json
 
 # Try to build, fallback to ts-node
-RUN npm run build 2>/dev/null || \
-    npx tsc -p tsconfig.build.json 2>/dev/null || \
+RUN npm run build || \
+    npx tsc -p tsconfig.build.json || \
     echo "Build failed, will use ts-node at runtime"
 
 EXPOSE 4008
