@@ -6,7 +6,7 @@ FROM node:18-alpine
 WORKDIR /app
 
 # Install Alpine dependencies for PDF/Excel generation
-RUN apk add --no-cache \
+RUN apk add --no-cache wget \
     tini \
     cairo-dev \
     pango-dev \
@@ -60,8 +60,8 @@ RUN echo '{ \
 }' > tsconfig.build.json
 
 # Try to build, fallback to ts-node
-RUN npm run build 2>/dev/null || \
-    npx tsc -p tsconfig.build.json 2>/dev/null || \
+RUN npm run build || \
+    npx tsc -p tsconfig.build.json || \
     echo "Build failed, will use ts-node at runtime"
 
 EXPOSE 4012
