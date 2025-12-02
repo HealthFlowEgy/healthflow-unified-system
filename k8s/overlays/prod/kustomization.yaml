@@ -1,0 +1,50 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+bases:
+  - ../../base
+
+namespace: healthflow
+
+namePrefix: prod-
+
+commonLabels:
+  environment: production
+
+patchesStrategicMerge:
+  - replica-patch.yaml
+  - resource-patch.yaml
+
+configMapGenerator:
+  - name: app-config
+    behavior: merge
+    literals:
+      - allowed-origins=https://healthflow.gov.eg,https://api.healthflow.gov.eg,https://portal.healthflow.gov.eg
+      - log-level=warn
+
+# Production secrets should be managed via external secret management
+# Use AWS Secrets Manager, HashiCorp Vault, or sealed-secrets
+# DO NOT commit actual production secrets to git
+secretGenerator:
+  - name: app-secrets
+    behavior: replace
+    files:
+      - jwt-secret=secrets/jwt-secret.txt
+      - app-secret=secrets/app-secret.txt
+  - name: postgres-secret
+    behavior: replace
+    files:
+      - password=secrets/postgres-password.txt
+      - connection-string=secrets/postgres-connection.txt
+
+replicas:
+  - name: api-gateway
+    count: 5
+  - name: auth-service
+    count: 3
+
+images:
+  - name: healthflow/api-gateway
+    newTag: v1.0.0
+  - name: healthflow/auth-service
+    newTag: v1.0.0

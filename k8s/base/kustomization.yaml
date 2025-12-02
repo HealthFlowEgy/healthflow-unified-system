@@ -1,0 +1,36 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: healthflow
+
+resources:
+  - namespace.yaml
+  - postgres-statefulset.yaml
+  - redis-statefulset.yaml
+  - api-gateway-deployment.yaml
+  - auth-service-deployment.yaml
+  # Add other service deployments here as they are created
+
+configMapGenerator:
+  - name: app-config
+    literals:
+      - allowed-origins=https://healthflow.gov.eg,https://api.healthflow.gov.eg
+      - log-level=info
+
+secretGenerator:
+  - name: app-secrets
+    literals:
+      - jwt-secret=CHANGE_ME_IN_PRODUCTION
+      - app-secret=CHANGE_ME_IN_PRODUCTION
+  - name: postgres-secret
+    literals:
+      - password=CHANGE_ME_IN_PRODUCTION
+      - connection-string=postgresql://healthflow:CHANGE_ME_IN_PRODUCTION@postgres:5432/healthflow
+
+commonLabels:
+  app.kubernetes.io/part-of: healthflow-unified-system
+  app.kubernetes.io/managed-by: kustomize
+
+commonAnnotations:
+  contact: dev@healthflow.gov.eg
+  documentation: https://github.com/HealthFlowEgy/healthflow-unified-system

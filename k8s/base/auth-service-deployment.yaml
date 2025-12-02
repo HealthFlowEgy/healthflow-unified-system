@@ -1,0 +1,105 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service
+  namespace: healthflow
+  labels:
+    app: auth-service
+spec:
+  type: ClusterIP
+  ports:
+    - port: 4003
+      targetPort: 4003
+      protocol: TCP
+      name: http
+  selector:
+    app: auth-service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-service
+  namespace: healthflow
+  labels:
+    app: auth-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: auth-service
+  template:
+    metadata:
+      labels:
+        app: auth-service
+    spec:
+      containers:
+        - name: auth-service
+          image: healthflow/auth-service:latest
+          ports:
+            - containerPort: 4003
+              name: http
+          env:
+            - name: FLASK_ENV
+              value: "production"
+            - name: PORT
+              value: "4003"
+            - name: JWT_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: jwt-secret
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: app-secret
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: connection-string
+            - name: REDIS_URL
+              value: "redis://redis:6379/0"
+            - name: JWT_ACCESS_TOKEN_EXPIRES
+              value: "900"
+            - name: JWT_REFRESH_TOKEN_EXPIRES
+              value: "604800"
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 4003
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 4003
+            initialDelaySeconds: 10
+            periodSeconds: 5
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: auth-service-hpa
+  namespace: healthflow
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: auth-service
+  minReplicas: 2
+  maxReplicas: 5
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
