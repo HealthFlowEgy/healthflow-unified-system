@@ -1,0 +1,37 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Install dependencies
+RUN apk add --no-cache tini wget
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci --prefer-offline --no-audit --no-fund
+
+# Copy source code
+COPY . .
+
+# Build TypeScript if tsconfig exists
+RUN if [ -f tsconfig.json ]; then npm run build || npx tsc || echo "Build failed, using ts-node"; fi
+
+# Expose port
+EXPOSE 8000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+  CMD wget --quiet --tries=1 --spider http://localhost:8000/health || exit 1
+
+# Run the application
+ENTRYPOINT ["/sbin/tini", "--"]
+CMD if [ -f "dist/index.js" ]; then \
+      node dist/index.js; \
+    elif [ -f "src/index.secure.ts" ]; then \
+      npx ts-node src/index.secure.ts; \
+    elif [ -f "src/index.ts" ]; then \
+      npx ts-node src/index.ts; \
+    else \
+      echo "No entry point found" && exit 1; \
+    fi

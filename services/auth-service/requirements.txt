@@ -31,7 +31,7 @@ pymongo==4.6.0
 # AUTHENTICATION & SECURITY
 # ============================================================================
 bcrypt==4.1.2
-cryptography==41.0.8
+cryptography>=41.0.0
 PyJWT==2.8.0
 authlib==1.2.1
 pyotp==2.9.0
@@ -89,7 +89,7 @@ PyPDF2==3.0.1
 requests==2.32.5
 httpx==0.25.2
 aiohttp==3.9.1
-urllib3==2.5.0
+urllib3<2.0,>=1.26.0  # Downgraded for kubernetes compatibility
 
 # ============================================================================
 # TASK QUEUE & ASYNC
@@ -113,8 +113,8 @@ elastic-apm==6.20.0
 # CONFIGURATION & ENVIRONMENT
 # ============================================================================
 python-dotenv==1.0.0
-pydantic==2.5.2
-pydantic-settings==2.1.0
+pydantic<2.0.0,>=1.10.0
+# pydantic-settings==2.1.0  # Commented out - incompatible with pydantic<2.0, use python-dotenv instead
 click==8.1.7
 python-decouple==3.8
 
@@ -176,27 +176,27 @@ kubernetes==28.1.0
 # HEALTHCARE SPECIFIC
 # ============================================================================
 # Medical coding systems
-icd10-cm==2023.1
-snomed-ct==2023.1
+icd10-cm>=0.0.5
+# snomed-ct==2023.1  # Package not available in PyPI, commented out
 
 # Drug databases
-rxnorm==2023.1
-ndc==2023.1
+# rxnorm==2023.1  # Package not available in PyPI, commented out
+# ndc==2023.1  # Package not available in PyPI, commented out
 
 # Clinical decision support
-cds-hooks==1.0.0
+# cds-hooks==1.0.0  # Package not available in PyPI, commented out
 
 # ============================================================================
 # INTERNATIONAL STANDARDS
 # ============================================================================
 # Estonia X-Road integration
-x-road-client==1.0.0
+# x-road-client==1.0.0  # Package not available in PyPI, commented out
 
 # NHS CIS2 authentication
-nhs-cis2==1.0.0
+# nhs-cis2==1.0.0  # Package not available in PyPI, commented out
 
 # Netherlands MedCom standards
-medcom-fhir==1.0.0
+# medcom-fhir==1.0.0  # Package not available in PyPI, commented out
 
 # ============================================================================
 # ADDITIONAL UTILITIES
@@ -212,7 +212,6 @@ cssselect==1.2.0
 # ============================================================================
 # PERFORMANCE & CACHING
 # ============================================================================
-memcached==1.59
 python-memcached==1.59
 django-redis==5.4.0
 
@@ -244,7 +243,7 @@ invoke==2.2.0
 pylint==3.0.3
 autopep8==2.0.4
 vulture==2.10
-safety==2.3.5
+# safety==2.3.5  # Commented out - conflicts with black's packaging requirement
 
 # ============================================================================
 # PRODUCTION MONITORING
@@ -257,7 +256,7 @@ rollbar==0.16.3
 # VERSION CONSTRAINTS
 # ============================================================================
 # Ensure compatibility with Python 3.11+
-python-version>=3.11
+# python-version>=3.11  # This is not a package, removed
 
 # Security updates
 setuptools>=65.5.1
@@ -349,7 +348,7 @@ cryptography>=41.0.0
 
 # MFA dependencies
 pyotp==2.9.0
-qrcode[pil]==7.4.2
+# qrcode[pil]==7.4.2  # Duplicate removed, using qrcode==8.2 instead
 
 # Load testing dependencies
 locust==2.15.1

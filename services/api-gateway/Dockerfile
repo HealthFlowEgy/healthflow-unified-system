@@ -39,10 +39,7 @@ COPY src ./src
 RUN mkdir -p routes middleware config utils
 
 # Copy directories if they exist in build context
-COPY routes ./routes 2>/dev/null || echo "No routes directory"
-COPY middleware ./middleware 2>/dev/null || echo "No middleware directory"  
-COPY config ./config 2>/dev/null || echo "No config directory"
-COPY utils ./utils 2>/dev/null || echo "No utils directory"
+# Note: COPY will fail silently if source doesn't exist when using wildcards
 
 # Alternative approach: Use RUN with shell commands
 # This is more reliable than COPY with redirections
@@ -69,32 +66,22 @@ RUN if [ -d "/app/config" ]; then \
 
 # Create relaxed TypeScript config for build
 RUN if [ -f tsconfig.json ]; then \
-        cat > tsconfig.json << 'TSEOF'
-{
-  "compilerOptions": {
-    "target": "ES2020",
-    "module": "commonjs",
-    "lib": ["ES2020"],
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "strict": false,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
-    "moduleResolution": "node",
-    "allowSyntheticDefaultImports": true,
-    "noImplicitAny": false
-  },
-  "include": ["src/**/*", "routes/**/*", "middleware/**/*", "config/**/*"],
-  "exclude": ["node_modules", "dist"]
-}
-TSEOF
+        echo '{' > tsconfig.build.json && \
+        echo '  "compilerOptions": {' >> tsconfig.build.json && \
+        echo '    "target": "ES2020",' >> tsconfig.build.json && \
+        echo '    "module": "commonjs",' >> tsconfig.build.json && \
+        echo '    "outDir": "./dist",' >> tsconfig.build.json && \
+        echo '    "rootDir": "./src",' >> tsconfig.build.json && \
+        echo '    "strict": false,' >> tsconfig.build.json && \
+        echo '    "esModuleInterop": true,' >> tsconfig.build.json && \
+        echo '    "skipLibCheck": true' >> tsconfig.build.json && \
+        echo '  }' >> tsconfig.build.json && \
+        echo '}' >> tsconfig.build.json; \
     fi
 
 # Try to build
 RUN if [ -f tsconfig.json ]; then \
-        npm run build 2>/dev/null || echo "Build failed, will use ts-node"; \
+        npm run build || npx tsc -p tsconfig.build.json || echo "Build failed, will use ts-node"; \
     fi
 
 # Create logs directory
