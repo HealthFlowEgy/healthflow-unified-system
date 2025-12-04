@@ -31,7 +31,7 @@ pymongo==4.6.0
 # AUTHENTICATION & SECURITY
 # ============================================================================
 bcrypt==4.1.2
-cryptography==41.0.8
+cryptography>=42.0.0
 PyJWT==2.8.0
 authlib==1.2.1
 pyotp==2.9.0
@@ -344,7 +344,6 @@ certifi==2025.8.3
 typing-extensions==4.14.1
 
 # HIPAA Compliance Security Updates
-cryptography>=41.0.0
 
 
 # MFA dependencies
