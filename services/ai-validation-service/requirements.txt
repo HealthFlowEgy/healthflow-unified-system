@@ -176,7 +176,7 @@ kubernetes==28.1.0
 # HEALTHCARE SPECIFIC
 # ============================================================================
 # Medical coding systems
-icd10-cm==2023.1
+icd10-cm>=0.0.5
 snomed-ct==2023.1
 
 # Drug databases
